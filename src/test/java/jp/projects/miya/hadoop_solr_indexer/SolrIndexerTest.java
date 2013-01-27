@@ -13,7 +13,6 @@ public class SolrIndexerTest {
 				"-D", Constants.SOLR_URL + "=http://10.211.55.16:8983/solr",
 				"-D", Constants.SEND_BUFFER_SIZE + "=1000",
 				"-D", Constants.REQUEST_THREAD_COUNT + "=3",
-				"input",
-				"output"} );
+				"input"} );
 	}
 }

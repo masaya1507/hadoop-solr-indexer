@@ -29,7 +29,7 @@ public class SolrIndexer extends Configured implements Tool {
 	 */
 	@Override
 	public int run(String[] args) throws Exception {
-		if (args.length != 2) {
+		if (args.length != 1) {
 			this.printUsage();
 			return -1;
 		} else {
@@ -69,7 +69,7 @@ public class SolrIndexer extends Configured implements Tool {
 						"-D " + Constants.SOLR_URL + "=<solr url>" +
 						"-D " + Constants.SEND_BUFFER_SIZE + "=<send buffer size>" +
 						"-D " + Constants.REQUEST_THREAD_COUNT + "=<thread count>" +
-						" <input dir> <output dir>\n",
+						" <input dir>\n",
 				getClass().getSimpleName());
 		ToolRunner.printGenericCommandUsage(System.err);
 	}
