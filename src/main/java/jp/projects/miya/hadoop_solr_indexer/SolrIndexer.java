@@ -10,6 +10,7 @@ import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.NullOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +35,6 @@ public class SolrIndexer extends Configured implements Tool {
 			return -1;
 		} else {
 			Configuration conf = this.getConf();
-			Job job = new Job(conf);
 			if (conf.get(Constants.CSV_HEADER_PROPERTY) == null
 				|| conf.get(Constants.SOLR_URL) == null
 				|| conf.get(Constants.SEND_BUFFER_SIZE) == null
@@ -42,7 +42,13 @@ public class SolrIndexer extends Configured implements Tool {
 				this.printUsage();
 				return -1;
 			}
+			HttpSolrServer server = new HttpSolrServer(conf.get(Constants.SOLR_URL));
 
+			SolrIndexer.LOG.info(conf.get(Constants.SOLR_URL) + " ping ...");
+			server.ping();
+			
+			Job job = new Job(conf);
+			
 			job.setJarByClass(SolrIndexer.class);
 			// job.setSomeProperty(...);
 
@@ -59,10 +65,21 @@ public class SolrIndexer extends Configured implements Tool {
 			job.setOutputKeyClass(NullWritable.class);
 			job.setOutputValueClass(NullWritable.class);
 
-			return job.waitForCompletion(true) ? 0 : 1;
+			SolrIndexer.LOG.info(conf.get(Constants.SOLR_URL) + " start indexer");
+			
+			if (job.waitForCompletion(true)) {
+				SolrIndexer.LOG.info(conf.get(Constants.SOLR_URL) + " indexes optimize ...");
+				
+				server.optimize();
+				
+				SolrIndexer.LOG.info(conf.get(Constants.SOLR_URL) + " indexes build done.");
+				return 0;
+			} else {
+				return 1;
+			}
 		}
 	}
-
+	
 	private void printUsage() {
 		System.err.printf(
 				"Usage: %s [generic options] -D " + Constants.CSV_HEADER_PROPERTY + "=<header-list>" +
@@ -80,8 +97,8 @@ public class SolrIndexer extends Configured implements Tool {
 	 * @throws Exception
 	 */
 	public static void main(String[] args) throws Exception {
-		SolrIndexer.LOG.info("Solr Indexer Start..");
 		int exitCode = ToolRunner.run(new SolrIndexer(), args);
+
 		System.exit(exitCode);
 	}
 }
